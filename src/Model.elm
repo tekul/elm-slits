@@ -89,12 +89,9 @@ slitAtY slits y =
         [] -> Nothing
         (s :: ss) -> if containsY y s then (Just s) else slitAtY ss y
 
---| Tolerance within which a coordinate will still be assumed to be "within" a slit
-delta : Int
-delta = 8
 
 containsY : Int -> Slit -> Bool
-containsY y (Slit y1 y2) = (y > y1 - delta) && (y < y2 + delta)
+containsY y (Slit y1 y2) = y >= y1 && y <= y2
 
 
 checkSlitPosition : Slits -> Slit -> Drag -> Drag
