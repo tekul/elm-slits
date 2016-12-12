@@ -43,9 +43,42 @@ type Msg
     | DragAt    Int
     | DragEnd
 
+{-| Begin dragging a slit, if the given y-coordinate intesects one. -}
+startDrag : Int -> Model -> Model
+startDrag y ({slits, screen, lambda, drag} as m) =
+    let
+        selectedSlit = slitAtY slits y
+        -- Remove the selected slit from the list while we drag it about
+        staticSlits = case selectedSlit of
+            Nothing -> slits
+            Just s  -> List.filter ((/=) s) slits
+        dragType s = WholeSlit
+    in
+        { m | slits = staticSlits, drag = Maybe.map (\s -> (dragType s, s)) selectedSlit }
+
+
+{-| Continue dragging a slit in response to a changing y-coordinate. -}
+doDrag : Int -> Model -> Model
+doDrag y ({slits, screen, lambda, drag} as m) =
+    case drag of
+        Nothing -> m
+        Just ((dragType, Slit y1 y2 as s) as d) ->
+            let
+                draggedSlit = (,) dragType <|
+                    case dragType of
+                        WholeSlit -> moveSlit s y
+                        Top       -> changeSlitWidth (y - y2) s
+                        Bottom    -> changeSlitWidth (y1 - y) s
+            in
+                draggedSlit
+                    |> checkSlitPosition slits s
+                    |> Just
+                    |> Model slits screen lambda
+
+
 --| Remove any dragging state from the model
-resetModel : Model -> Model
-resetModel m =
+stopDrag : Model -> Model
+stopDrag m =
     case m.drag of
         Just (_, s) -> { m | slits = (s :: m.slits), drag = Nothing }
         Nothing -> m
@@ -63,12 +96,6 @@ delta = 8
 containsY : Int -> Slit -> Bool
 containsY y (Slit y1 y2) = (y > y1 - delta) && (y < y2 + delta)
 
-doDrag : Int -> Drag -> Drag
-doDrag y (drag, Slit y1 y2 as s) = (,) drag <|
-    case drag of
-        WholeSlit -> moveSlit (Debug.log "moving slit" s) y
-        Top       -> changeSlitWidth (y - y2) s
-        Bottom    -> changeSlitWidth (y1 - y) s
 
 checkSlitPosition : Slits -> Slit -> Drag -> Drag
 checkSlitPosition slits originalSlit (dt, Slit y1 y2 as s) = (,) dt <|

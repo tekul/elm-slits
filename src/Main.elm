@@ -37,32 +37,17 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = (doUpdate msg model, Cmd.none)
 
 doUpdate : Msg -> Model -> Model
-doUpdate msg ({slits, screen, lambda, drag} as m) =
+doUpdate msg m =
     case msg of
         DragStart y ->
-            case drag of
+            case m.drag of
                 --| Reset if we get a spurious DragStart message (sometimes we miss the drag end)
-                Just _  -> resetModel m
-                Nothing ->
-                    let
-                        selectedSlit = slitAtY slits y
-                        -- Remove the selected slit from the list while we drag it about
-                        staticSlits = case selectedSlit of
-                            Nothing -> slits
-                            Just s  -> List.filter ((/=) s) slits
-                        dragType s = WholeSlit
-                    in
-                        { m | slits = staticSlits, drag = Maybe.map (\s -> (dragType s, s)) selectedSlit }
+                Just _  -> stopDrag m
+                Nothing -> startDrag y m
         DragAt y ->
-            case drag of
-                Nothing -> m
-                Just ((dt, originalSlit) as d) ->
-                    doDrag y d
-                        |> checkSlitPosition slits originalSlit
-                        |> Just
-                        |> Model slits screen lambda
+            doDrag y m
         DragEnd  ->
-            resetModel m
+            stopDrag m
 
 
 {-| Run the program.
