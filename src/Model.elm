@@ -59,22 +59,23 @@ startDrag y ({slits, screen, lambda, drag} as m) =
 
 {-| Continue dragging a slit in response to a changing y-coordinate. -}
 doDrag : Int -> Model -> Model
-doDrag y ({slits, screen, lambda, drag} as m) =
-    case drag of
+doDrag y m =
+    case m.drag of
         Nothing -> m
-        Just ((dragType, Slit y1 y2 as s) as d) ->
+        Just (dragType, Slit y1 y2 as s) ->
             let
-                draggedSlit = (,) dragType <|
+                checkSlitPosition (Slit y1 y2 as newSlit) =
+                    if y1 < 0 || y2 > 600 || List.any (intersects newSlit) m.slits
+                        then s
+                        else newSlit
+
+                draggedSlit = checkSlitPosition <|
                     case dragType of
                         WholeSlit -> moveSlit s y
                         Top       -> changeSlitWidth (y - y2) s
                         Bottom    -> changeSlitWidth (y1 - y) s
             in
-                draggedSlit
-                    |> checkSlitPosition slits s
-                    |> Just
-                    |> Model slits screen lambda
-
+                { m | drag = Just (dragType, draggedSlit) }
 
 --| Remove any dragging state from the model
 stopDrag : Model -> Model
@@ -93,12 +94,6 @@ slitAtY slits y =
 containsY : Int -> Slit -> Bool
 containsY y (Slit y1 y2) = y >= y1 && y <= y2
 
-
-checkSlitPosition : Slits -> Slit -> Drag -> Drag
-checkSlitPosition slits originalSlit (dt, Slit y1 y2 as s) = (,) dt <|
-    if y1 < 0 || y2 > 600 || List.any (intersects s) slits
-        then originalSlit
-        else s
 
 intersects : Slit -> Slit -> Bool
 intersects (Slit y1 y2) (Slit yy1 yy2) =
