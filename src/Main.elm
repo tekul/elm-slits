@@ -10,7 +10,7 @@ pattern being updated in real-time.
 
 import Html exposing (program)
 import Maybe
-import Model exposing (..)
+import Model exposing (Model, Msg(..), Slit(..), startDrag, doDrag, stopDrag)
 import Mouse exposing (moves, ups)
 import View exposing (view)
 

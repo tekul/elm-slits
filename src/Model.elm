@@ -1,4 +1,4 @@
-module Model exposing (..)
+module Model exposing (Model, DiffractionPattern, Msg(..), Screen, Slit(..), Slits, Wavelength, startDrag, doDrag, stopDrag)
 
 {-| The slits model -}
 type Slit = Slit Int Int

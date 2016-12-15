@@ -2,7 +2,7 @@ module View exposing (view)
 
 import Html exposing (..)
 import Json.Decode as Decode
-import Model exposing (..)
+import Model exposing (Model, Msg(..), Screen, Slits, Slit(..), DiffractionPattern, Wavelength)
 import Mouse exposing (Position)
 import Svg exposing (..)
 import Svg.Attributes exposing (style, fill, stroke, points, width, height, x, y)
