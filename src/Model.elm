@@ -60,22 +60,20 @@ startDrag y ({slits, screen, lambda, drag} as m) =
 {-| Continue dragging a slit in response to a changing y-coordinate. -}
 doDrag : Int -> Model -> Model
 doDrag y m =
-    case m.drag of
-        Nothing -> m
-        Just (dragType, Slit y1 y2 as s) ->
-            let
-                checkSlitPosition (Slit y1 y2 as newSlit) =
-                    if y1 < 0 || y2 > 600 || List.any (intersects newSlit) m.slits
-                        then s
-                        else newSlit
-
-                draggedSlit = checkSlitPosition <|
-                    case dragType of
-                        WholeSlit -> moveSlit s y
-                        Top       -> changeSlitWidth (y - y2) s
-                        Bottom    -> changeSlitWidth (y1 - y) s
-            in
-                { m | drag = Just (dragType, draggedSlit) }
+    let
+        checkSlitPosition oldSlit (Slit y1 y2 as newSlit) =
+            if y1 < 0 || y2 > 600 || List.any (intersects newSlit) m.slits
+                then oldSlit
+                else newSlit
+        dragSlit (dragType, Slit y1 y2 as s) =
+            (,) dragType
+                <| checkSlitPosition s
+                <| case dragType of
+                    WholeSlit -> moveSlit s y
+                    Top       -> changeSlitWidth (y - y2) s
+                    Bottom    -> changeSlitWidth (y1 - y) s
+    in
+        { m | drag = Maybe.map dragSlit m.drag}
 
 --| Remove any dragging state from the model
 stopDrag : Model -> Model
