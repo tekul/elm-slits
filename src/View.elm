@@ -2,7 +2,7 @@ module View exposing (view)
 
 import Html exposing (..)
 import Json.Decode as Decode
-import Model exposing (Model, Msg(..), Screen, Slits, Slit(..), DiffractionPattern, Wavelength)
+import Model exposing (Model, Msg(..), Screen, Slit(..), DiffractionPattern, Wavelength, getSlits)
 import Mouse exposing (Position)
 import Svg exposing (..)
 import Svg.Attributes exposing (style, fill, stroke, points, width, height, x, y)
@@ -11,10 +11,7 @@ import Svg.Events exposing (on)
 view : Model -> Html Model.Msg
 view m =
     let
-        selectedSlit = Maybe.map Tuple.second m.drag
-        slits = case selectedSlit of
-            Nothing -> m.slits
-            Just s  -> s :: m.slits
+        slits = getSlits m
         pattern = calculateDiffractionPattern slits m.screen m.lambda
     in
         svg
@@ -31,7 +28,7 @@ drawScreen : Screen -> Svg Msg
 drawScreen {x , y1, y2} = line [stroke "black", Svg.Attributes.x1 (toString x), Svg.Attributes.y1 (toString y1), Svg.Attributes.x2 (toString x), Svg.Attributes.y2 (toString y2)] []
 
 
-drawSlits : Slits -> Svg Msg
+drawSlits : List Slit -> Svg Msg
 drawSlits slits =
     let
         onMouseDown = on "mousedown" (Decode.map (\p -> DragStart p.y) Mouse.position)
@@ -53,7 +50,7 @@ drawDiffractionPattern pattern =
             [polygon [fill "gold", stroke "gold", points pointsStr] []]
 
 
-calculateDiffractionPattern : Slits -> Screen -> Wavelength -> DiffractionPattern
+calculateDiffractionPattern : List Slit -> Screen -> Wavelength -> DiffractionPattern
 calculateDiffractionPattern slits screen lambda =
     let
         (xSlits, ySlits) = calculateSlitsPosition
@@ -110,7 +107,7 @@ calculateDiffractionPattern slits screen lambda =
             |> (::) (screen.y1, screen.x)
             |> (::) (screen.y2, screen.x)
 
-doSlits : Float -> (Float, Float) -> Slits -> (Float, Float)
+doSlits : Float -> (Float, Float) -> List Slit -> (Float, Float)
 doSlits factor (k, m) slits =
     case slits of
         [] -> (k, m)

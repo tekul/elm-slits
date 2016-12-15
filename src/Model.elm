@@ -1,9 +1,7 @@
-module Model exposing (Model, DiffractionPattern, Msg(..), Screen, Slit(..), Slits, Wavelength, startDrag, doDrag, stopDrag)
+module Model exposing (Model, DiffractionPattern, Msg(..), Screen, Slit(..), Wavelength, getSlits, startDrag, doDrag, stopDrag)
 
 {-| The slits model -}
 type Slit = Slit Int Int
-
-type alias Slits = List Slit
 
 type alias Wavelength = Float
 
@@ -21,17 +19,17 @@ type DragType
     | Top
 
 --| The slit we are dragging and the type of drag
-type alias Drag = (DragType, Slit)
+type Drag = Drag DragType Slit
 
 --| A list of y coordinate and intensity value pairs
 type alias DiffractionPattern = List (Int, Int)
 
 --| Model is the array of static slits plus the slit being dragged
 type alias Model =
-    { slits : Slits
+    { slits : List Slit
     , screen : Screen
     , lambda : Wavelength
-    , drag : Maybe (DragType, Slit)
+    , drag : Maybe Drag
     }
 
 {-| The messages that are handled by the application
@@ -42,6 +40,14 @@ type Msg
     = DragStart Int
     | DragAt    Int
     | DragEnd
+
+
+{-| Provides the complete list of slits, including the dragged one, if any. -}
+getSlits : Model -> List Slit
+getSlits m = case m.drag of
+    Nothing -> m.slits
+    Just (Drag _ s) -> s :: m.slits
+
 
 {-| Begin dragging a slit, if the given y-coordinate intesects one. -}
 startDrag : Int -> Model -> Model
@@ -54,7 +60,7 @@ startDrag y ({slits, screen, lambda, drag} as m) =
             Just s  -> List.filter ((/=) s) slits
         dragType s = WholeSlit
     in
-        { m | slits = staticSlits, drag = Maybe.map (\s -> (dragType s, s)) selectedSlit }
+        { m | slits = staticSlits, drag = Maybe.map (\s -> Drag (dragType s) s) selectedSlit }
 
 
 {-| Continue dragging a slit in response to a changing y-coordinate. -}
@@ -65,8 +71,8 @@ doDrag y m =
             if y1 < 0 || y2 > 600 || List.any (intersects newSlit) m.slits
                 then oldSlit
                 else newSlit
-        dragSlit (dragType, Slit y1 y2 as s) =
-            (,) dragType
+        dragSlit (Drag dragType (Slit y1 y2 as s)) =
+            Drag dragType
                 <| checkSlitPosition s
                 <| case dragType of
                     WholeSlit -> moveSlit s y
@@ -79,10 +85,10 @@ doDrag y m =
 stopDrag : Model -> Model
 stopDrag m =
     case m.drag of
-        Just (_, s) -> { m | slits = (s :: m.slits), drag = Nothing }
+        Just (Drag _ s) -> { m | slits = (s :: m.slits), drag = Nothing }
         Nothing -> m
 
-slitAtY : Slits -> Int -> Maybe Slit
+slitAtY : List Slit -> Int -> Maybe Slit
 slitAtY slits y =
     case slits of
         [] -> Nothing
