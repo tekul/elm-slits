@@ -58,7 +58,17 @@ startDrag y ({slits, screen, lambda, drag} as m) =
         staticSlits = case selectedSlit of
             Nothing -> slits
             Just s  -> List.filter ((/=) s) slits
-        dragType s = WholeSlit
+        dragType (Slit y1 y2) =
+            let
+                mid = abs (y - (y1 + y2) // 2)
+                top = abs (y - y2)
+                bot = abs (y - y1)
+            in
+               if mid <= top && mid <= bot then
+                   WholeSlit
+               else if top < mid && top < bot then
+                   Top
+               else Bottom
     in
         { m | slits = staticSlits, drag = Maybe.map (\s -> Drag (dragType s) s) selectedSlit }
 
@@ -67,8 +77,9 @@ startDrag y ({slits, screen, lambda, drag} as m) =
 doDrag : Int -> Model -> Model
 doDrag y m =
     let
+        minWidth = 1
         checkSlitPosition oldSlit (Slit y1 y2 as newSlit) =
-            if y1 < 0 || y2 > 600 || List.any (intersects newSlit) m.slits
+            if y1 < 0 || y2 > 600 || (y2 - y1 < minWidth) || List.any (intersects newSlit) m.slits
                 then oldSlit
                 else newSlit
         dragSlit (Drag dragType (Slit y1 y2 as s)) =
