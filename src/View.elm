@@ -1,11 +1,10 @@
 module View exposing (view)
 
 import Html exposing (..)
-import Json.Decode as Decode
+import Json.Decode as Json
 import Model exposing (Model, Msg(..), Screen, Slit(..), DiffractionPattern, Wavelength, getSlits)
-import Mouse exposing (Position)
 import Svg exposing (..)
-import Svg.Attributes exposing (style, fill, stroke, points, width, height, x, y)
+import Svg.Attributes exposing (style, fill, fillOpacity, stroke, points, width, height, x, y)
 import Svg.Events exposing (on)
 
 view : Model -> Html Model.Msg
@@ -31,12 +30,14 @@ drawScreen {x , y1, y2} = line [stroke "black", Svg.Attributes.x1 (toString x), 
 drawSlits : List Slit -> Svg Msg
 drawSlits slits =
     let
-        onMouseDown = on "mousedown" (Decode.map (\p -> DragStart p.y) Mouse.position)
-        background = rect [width "80", height "600", fill "gray" ] []
-        drawSlit (Slit y1 y2) = rect [onMouseDown, Svg.Attributes.style "cursor: move", y (toString y1), width "80", height (toString (y2 - y1)), fill "black" ] []
+        intField f = Json.field f Json.int
+        onMouseDown = on "mousedown" <| Json.map2 DragStart (intField "pageY") (intField "offsetY")
+        background = rect [ onMouseDown, width "80", height "600", fill "gray" ] []
+        overlay = rect [ onMouseDown, width "80", height "600", fillOpacity "0" ] []
+        drawSlit (Slit y1 y2) = rect [Svg.Attributes.style "cursor: move", y (toString y1), width "80", height (toString (y2 - y1)), fill "black" ] []
     in
         g []
-            (background :: (List.map drawSlit slits))
+            (background :: (List.map drawSlit slits) ++ [overlay])
 
 
 drawDiffractionPattern : DiffractionPattern -> Svg Msg

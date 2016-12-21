@@ -18,8 +18,8 @@ type DragType
     | Bottom
     | Top
 
---| The slit we are dragging and the type of drag
-type Drag = Drag DragType Slit
+{-| The slit we are dragging, the type of drag and the initial browser y coordinate -}
+type Drag = Drag DragType Int Slit
 
 --| A list of y coordinate and intensity value pairs
 type alias DiffractionPattern = List (Int, Int)
@@ -34,10 +34,12 @@ type alias Model =
 
 {-| The messages that are handled by the application
 
-For dragging we only care about the y coordinate.
+For dragging we only care about the y coordinate. When we start dragging, we get both the browser y coordinate and
+the offsetY coordinate within the slit svg. Storing the browser coordinate allows the relative offset to be
+calculated from the elm mouse move events (which are browser coordinates).
 -}
 type Msg
-    = DragStart Int
+    = DragStart Int Int
     | DragAt    Int
     | DragEnd
 
@@ -46,13 +48,15 @@ type Msg
 getSlits : Model -> List Slit
 getSlits m = case m.drag of
     Nothing -> m.slits
-    Just (Drag _ s) -> s :: m.slits
+    Just (Drag _ _ s) -> s :: m.slits
 
 
-{-| Begin dragging a slit, if the given y-coordinate intesects one. -}
-startDrag : Int -> Model -> Model
-startDrag y ({slits, screen, lambda, drag} as m) =
+{-| Begin dragging a slit, if the given y-coordinate intersects one. -}
+startDrag : (Int, Int) -> Model -> Model
+startDrag (yPage, y) ({slits, screen, lambda, drag} as m) =
     let
+        -- The y-origin relative to the svg
+        y0 = yPage - y
         selectedSlit = slitAtY slits y
         -- Remove the selected slit from the list while we drag it about
         staticSlits = case selectedSlit of
@@ -70,7 +74,7 @@ startDrag y ({slits, screen, lambda, drag} as m) =
                    Top
                else Bottom
     in
-        { m | slits = staticSlits, drag = Maybe.map (\s -> Drag (dragType s) s) selectedSlit }
+        { m | slits = staticSlits, drag = Maybe.map (\s -> Drag (dragType s) y0 s) selectedSlit }
 
 
 {-| Continue dragging a slit in response to a changing y-coordinate. -}
@@ -82,13 +86,14 @@ doDrag y m =
             if y1 < 0 || y2 > 600 || (y2 - y1 < minWidth) || List.any (intersects newSlit) m.slits
                 then oldSlit
                 else newSlit
-        dragSlit (Drag dragType (Slit y1 y2 as s)) =
-            Drag dragType
+        dragSlit (Drag dragType y0 (Slit y1 y2 as s)) =
+            Drag dragType y0
                 <| checkSlitPosition s
                 <| case dragType of
-                    WholeSlit -> moveSlit s y
-                    Top       -> changeSlitWidth (y - y2) s
-                    Bottom    -> changeSlitWidth (y1 - y) s
+                    -- y relative to svg is y - y0
+                    WholeSlit -> moveSlit s (y - y0)
+                    Top       -> changeSlitWidth (y - y0 - y2) s
+                    Bottom    -> changeSlitWidth (y1 - y - y0) s
     in
         { m | drag = Maybe.map dragSlit m.drag}
 
@@ -96,7 +101,7 @@ doDrag y m =
 stopDrag : Model -> Model
 stopDrag m =
     case m.drag of
-        Just (Drag _ s) -> { m | slits = (s :: m.slits), drag = Nothing }
+        Just (Drag _ _ s) -> { m | slits = (s :: m.slits), drag = Nothing }
         Nothing -> m
 
 slitAtY : List Slit -> Int -> Maybe Slit

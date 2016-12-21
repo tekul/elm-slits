@@ -39,11 +39,11 @@ update msg model = (doUpdate msg model, Cmd.none)
 doUpdate : Msg -> Model -> Model
 doUpdate msg m =
     case msg of
-        DragStart y ->
+        DragStart y0 y1 ->
             case m.drag of
                 --| Reset if we get a spurious DragStart message (sometimes we miss the drag end)
                 Just _  -> stopDrag m
-                Nothing -> startDrag y m
+                Nothing -> startDrag (y0, y1) m
         DragAt y ->
             doDrag y m
         DragEnd  ->
