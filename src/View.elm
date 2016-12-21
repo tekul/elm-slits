@@ -71,7 +71,7 @@ calculateDiffractionPattern slits screen lambda =
             in
                 (xSlits, ySlits)
 
-        l = xScreen - xSlits
+        l = abs (xScreen - xSlits)
         twoPiOverLambda = 2 * pi / lambda
         zip = List.map2 (,)
 
