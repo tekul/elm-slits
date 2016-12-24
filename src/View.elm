@@ -14,8 +14,8 @@ view m =
         pattern = calculateDiffractionPattern slits m.screen m.lambda
     in
         svg
-            [ width "900"
-            , height "600"
+            [ width m.width
+            , height m.height
             ]
             [ drawSlits slits
             , drawScreen m.screen

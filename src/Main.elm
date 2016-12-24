@@ -14,16 +14,24 @@ import Model exposing (Model, Msg(..), Slit(..), startDrag, doDrag, stopDrag)
 import Mouse exposing (moves, ups)
 import View exposing (view)
 
-init : (Model, Cmd Msg)
-init =
+
+type alias Flags =
+    { width : Int
+    , height : Int
+    }
+
+init : Flags -> (Model, Cmd Msg)
+init { width, height } =
     let
         slits = [Slit 10 20, Slit 400 410]
-        screen = { x = 550, y1 = 0, y2 = 600, theta1 = 50, theta2 = -50 }
+        screen = { x = width, y1 = 0, y2 = height, theta1 = 50, theta2 = -50 }
     in
         ( { slits = slits
           , drag = Nothing
           , screen = screen
           , lambda = 50
+          , width = toString width
+          , height = toString height
           }
         , Cmd.none )
 
@@ -52,9 +60,18 @@ doUpdate msg m =
 
 {-| Run the program.
 -}
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
+    {-
     Html.program
+        { init = init (Flags 800 600)
+        , subscriptions = subscriptions
+        , update = update
+        , view = view
+        }
+-}
+
+    Html.programWithFlags
         { init = init
         , subscriptions = subscriptions
         , update = update

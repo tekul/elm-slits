@@ -30,6 +30,8 @@ type alias Model =
     , screen : Screen
     , lambda : Wavelength
     , drag : Maybe Drag
+    , width : String
+    , height : String
     }
 
 {-| The messages that are handled by the application
