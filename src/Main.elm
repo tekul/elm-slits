@@ -23,7 +23,7 @@ type alias Flags =
 init : Flags -> (Model, Cmd Msg)
 init { width, height } =
     let
-        slits = [Slit 10 20, Slit 400 410]
+        slits = layoutSlits 2 height
         screen = { x = width, y1 = 0, y2 = height, theta1 = 50, theta2 = -50 }
     in
         ( { slits = slits
@@ -34,6 +34,24 @@ init { width, height } =
           , height = toString height
           }
         , Cmd.none )
+
+
+layoutSlits : Int -> Int -> List Slit
+layoutSlits n h =
+    let
+        slitSpacing = h // (n + 1)
+        halfSlitWidth = h // (5 * n)
+        mkSlit i = Slit (i * slitSpacing - halfSlitWidth) (i * slitSpacing + halfSlitWidth)
+        -- Special case for double slits
+        slitSpacing2 = h // 6
+        slitWidth2 = h // 10
+    in
+        if n == 2
+            then [ Slit slitSpacing2 (slitSpacing2 + slitWidth2)
+                 , Slit (h - slitSpacing2 - slitWidth2) (h - slitSpacing2)
+                 ]
+            else List.map mkSlit (List.range 1 n)
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
