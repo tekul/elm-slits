@@ -17,7 +17,7 @@ view m =
             [ width m.width
             , height m.height
             ]
-            [ drawSlits slits
+            [ drawSlits m.height slits
             , drawScreen m.screen
             , drawDiffractionPattern pattern
             ]
@@ -27,13 +27,13 @@ drawScreen : Screen -> Svg Msg
 drawScreen {x , y1, y2} = line [stroke "black", Svg.Attributes.x1 (toString x), Svg.Attributes.y1 (toString y1), Svg.Attributes.x2 (toString x), Svg.Attributes.y2 (toString y2)] []
 
 
-drawSlits : List Slit -> Svg Msg
-drawSlits slits =
+drawSlits : String -> List Slit -> Svg Msg
+drawSlits h slits =
     let
         intField f = Json.field f Json.int
         onMouseDown = on "mousedown" <| Json.map2 DragStart (intField "pageY") (intField "offsetY")
-        background = rect [ onMouseDown, width "80", height "600", fill "gray" ] []
-        overlay = rect [ onMouseDown, width "80", height "600", fillOpacity "0" ] []
+        background = rect [ onMouseDown, width "80", height h, fill "gray" ] []
+        overlay = rect [ onMouseDown, width "80", height h, fillOpacity "0" ] []
         drawSlit (Slit y1 y2) = rect [Svg.Attributes.style "cursor: move", y (toString y1), width "80", height (toString (y2 - y1)), fill "black" ] []
     in
         g []
