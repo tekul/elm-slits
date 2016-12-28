@@ -9,8 +9,6 @@ type alias Screen =
     { x : Int
     , y1 : Int
     , y2 : Int
-    , theta1 : Int
-    , theta2 : Int
     }
 
 type DragType
@@ -27,6 +25,7 @@ type alias DiffractionPattern = List (Int, Int)
 --| Model is the array of static slits plus the slit being dragged
 type alias Model =
     { slits : List Slit
+    , slitsXY : (Int, Int)
     , screen : Screen
     , lambda : Wavelength
     , drag : Maybe Drag

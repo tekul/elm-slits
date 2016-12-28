@@ -24,9 +24,10 @@ init : Flags -> (Model, Cmd Msg)
 init { width, height } =
     let
         slits = layoutSlits 2 height
-        screen = { x = width, y1 = 0, y2 = height, theta1 = 50, theta2 = -50 }
+        screen = { x = width, y1 = 0, y2 = height }
     in
         ( { slits = slits
+          , slitsXY = (200, height // 2)
           , drag = Nothing
           , screen = screen
           , lambda = 50

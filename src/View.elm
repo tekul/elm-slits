@@ -1,26 +1,43 @@
 module View exposing (view)
 
-import Html exposing (..)
+import Html exposing (Html)
 import Json.Decode as Json
 import Model exposing (Model, Msg(..), Screen, Slit(..), DiffractionPattern, Wavelength, getSlits)
 import Svg exposing (..)
 import Svg.Attributes exposing (style, fill, fillOpacity, stroke, points, width, height, x, y)
 import Svg.Events exposing (on)
+import Tuple exposing (mapFirst, mapSecond)
 
 view : Model -> Html Model.Msg
 view m =
     let
         slits = getSlits m
-        pattern = calculateDiffractionPattern slits m.screen m.lambda
         h = toString m.height
+        slitsXY = m.slitsXY
+            |> mapFirst toFloat
+            |> mapSecond toFloat
+        pattern = calculateDiffractionPattern slits slitsXY m.screen m.lambda
     in
         svg
             [ width m.width
             , height h
             ]
             [ drawZoomedSlits h slits
+            , drawSourceAndSlits m.slitsXY m.screen
             , drawScreen m.screen
             , drawDiffractionPattern pattern
+            ]
+
+drawSourceAndSlits : (Int, Int) -> Screen -> Svg msg
+drawSourceAndSlits (xSlits, ySlits) screen =
+    let
+        (xSource, ySource) = (100, ySlits)
+    in
+        g []
+            [ drawLine "gold" (xSource, ySource) (xSlits, ySlits)
+            , rect [fill "gray", height "20", width "5", x (toString xSlits), y (toString (ySlits - 10))] []
+            , drawLine "gold" (xSlits + 5, ySlits) (screen.x, screen.y1)
+            , drawLine "gold" (xSlits + 5, ySlits) (screen.x, screen.y2)
             ]
 
 drawLine : String -> (Int, Int) -> (Int, Int) -> Svg msg
@@ -56,26 +73,13 @@ drawDiffractionPattern pattern =
             [polygon [fill "gold", stroke "gold", points pointsStr] []]
 
 
-calculateDiffractionPattern : List Slit -> Screen -> Wavelength -> DiffractionPattern
-calculateDiffractionPattern slits screen lambda =
+calculateDiffractionPattern : List Slit -> (Float, Float) -> Screen -> Wavelength -> DiffractionPattern
+calculateDiffractionPattern slits (xSlits, ySlits) screen lambda =
     let
-        (xSlits, ySlits) = calculateSlitsPosition
         y0Screen = toFloat screen.y1
         y1Screen = toFloat screen.y2
         xScreen  = toFloat screen.x
         screenHeight = y1Screen - y0Screen
-
-        calculateSlitsPosition =
-            let
-                tanT1 = tan (toFloat screen.theta1 * pi/180)
-                tanT2 = tan (toFloat screen.theta2 * pi/180)
-                ySlits = (y0Screen + screenHeight * tanT2) / (tanT2 - tanT1)
-                xSlits = if screen.theta1 == 0
-                            then xScreen + (ySlits - y0Screen) / tanT2
-                            else xScreen - screenHeight / tanT2
-            in
-                (xSlits, ySlits)
-
         l = abs (xScreen - xSlits)
         twoPiOverLambda = 2 * pi / lambda
         zip = List.map2 (,)
