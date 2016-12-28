@@ -129,7 +129,7 @@ moveSlit (Slit y1 y2) y =
         currentPosition = (y1 + y2) // 2
         delta = y - currentPosition
     in
-        Debug.log "slit" <| Slit (y1 + delta) (y2 + delta)
+        Slit (y1 + delta) (y2 + delta)
 
 --| Change the slit width by a positive or negative amount, maintaining the same midpoint.
 -- The width is changed by twice the given amount since it is added to the top coordinate and subtracted
