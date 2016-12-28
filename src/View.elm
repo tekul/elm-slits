@@ -12,12 +12,13 @@ view m =
     let
         slits = getSlits m
         pattern = calculateDiffractionPattern slits m.screen m.lambda
+        h = toString m.height
     in
         svg
             [ width m.width
-            , height m.height
+            , height h
             ]
-            [ drawSlits m.height slits
+            [ drawZoomedSlits h slits
             , drawScreen m.screen
             , drawDiffractionPattern pattern
             ]
@@ -27,8 +28,9 @@ drawScreen : Screen -> Svg Msg
 drawScreen {x , y1, y2} = line [stroke "black", Svg.Attributes.x1 (toString x), Svg.Attributes.y1 (toString y1), Svg.Attributes.x2 (toString x), Svg.Attributes.y2 (toString y2)] []
 
 
-drawSlits : String -> List Slit -> Svg Msg
-drawSlits h slits =
+
+drawZoomedSlits : String -> List Slit -> Svg Msg
+drawZoomedSlits h slits =
     let
         intField f = Json.field f Json.int
         onMouseDown = on "mousedown" <| Json.map2 DragStart (intField "pageY") (intField "offsetY")

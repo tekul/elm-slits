@@ -31,7 +31,7 @@ init { width, height } =
           , screen = screen
           , lambda = 50
           , width = toString width
-          , height = toString height
+          , height = height
           }
         , Cmd.none )
 

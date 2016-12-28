@@ -31,7 +31,7 @@ type alias Model =
     , lambda : Wavelength
     , drag : Maybe Drag
     , width : String
-    , height : String
+    , height : Int
     }
 
 {-| The messages that are handled by the application
@@ -85,7 +85,7 @@ doDrag y m =
     let
         minWidth = 1
         checkSlitPosition oldSlit (Slit y1 y2 as newSlit) =
-            if y1 < 0 || y2 > 600 || (y2 - y1 < minWidth) || List.any (intersects newSlit) m.slits
+            if y1 < 0 || y2 > m.height || (y2 - y1 < minWidth) || List.any (intersects newSlit) m.slits
                 then oldSlit
                 else newSlit
         dragSlit (Drag dragType y0 (Slit y1 y2 as s)) =
