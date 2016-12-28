@@ -23,10 +23,13 @@ view m =
             , drawDiffractionPattern pattern
             ]
 
+drawLine : String -> (Int, Int) -> (Int, Int) -> Svg msg
+drawLine colour (x1, y1) (x2, y2) =
+    line [stroke colour, Svg.Attributes.x1 (toString x1), Svg.Attributes.y1 (toString y1), Svg.Attributes.x2 (toString x2), Svg.Attributes.y2 (toString y2)] []
 
-drawScreen : Screen -> Svg Msg
-drawScreen {x , y1, y2} = line [stroke "black", Svg.Attributes.x1 (toString x), Svg.Attributes.y1 (toString y1), Svg.Attributes.x2 (toString x), Svg.Attributes.y2 (toString y2)] []
 
+drawScreen : Screen -> Svg msg
+drawScreen {x , y1, y2} = drawLine "black" (x, y1) (x, y2)
 
 
 drawZoomedSlits : String -> List Slit -> Svg Msg
