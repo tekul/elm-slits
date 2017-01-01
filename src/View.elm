@@ -17,12 +17,14 @@ view m =
             |> mapFirst toFloat
             |> mapSecond toFloat
         pattern = calculateDiffractionPattern slits slitsXY m.screen m.lambda
+        background = rect [fill "#333", height h, width m.width] []
     in
         svg
             [ width m.width
             , height h
             ]
-            [ drawZoomedSlits h slits
+            [ background
+            , drawZoomedSlits h slits
             , drawSourceAndSlits m.slitsXY m.screen
             , drawScreen m.screen
             , drawDiffractionPattern pattern
@@ -34,7 +36,10 @@ drawSourceAndSlits (xSlits, ySlits) screen =
         (xSource, ySource) = (100, ySlits)
     in
         g []
-            [ drawLine "gold" (xSource, ySource) (xSlits, ySlits)
+            [ drawLine "gold" (xSource - 7, ySource) (xSlits, ySlits)
+            , drawLine "gold" (xSource, ySource - 7) (xSource, ySource + 7)
+            , drawLine "gold" (xSource - 5, ySource - 5) (xSource + 5, ySource + 5)
+            , drawLine "gold" (xSource - 5, ySource + 5) (xSource + 5, ySource - 5)
             , rect [fill "gray", height "20", width "5", x (toString xSlits), y (toString (ySlits - 10))] []
             , drawLine "gold" (xSlits + 5, ySlits) (screen.x, screen.y1)
             , drawLine "gold" (xSlits + 5, ySlits) (screen.x, screen.y2)
