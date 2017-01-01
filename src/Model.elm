@@ -43,6 +43,7 @@ type Msg
     = DragStart Int Int
     | DragAt    Int
     | DragEnd
+    | NumSlits Int
 
 
 {-| Provides the complete list of slits, including the dragged one, if any. -}

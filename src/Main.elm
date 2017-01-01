@@ -38,8 +38,13 @@ init { width, height } =
 
 
 layoutSlits : Int -> Int -> List Slit
-layoutSlits n h =
+layoutSlits n_ h =
     let
+        n = if n_ < 1
+               then 1
+            else if n_ > 10
+               then 10
+            else n_
         slitSpacing = h // (n + 1)
         halfSlitWidth = h // (5 * n)
         mkSlit i = Slit (i * slitSpacing - halfSlitWidth) (i * slitSpacing + halfSlitWidth)
@@ -63,6 +68,7 @@ subscriptions model =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = (doUpdate msg model, Cmd.none)
 
+
 doUpdate : Msg -> Model -> Model
 doUpdate msg m =
     case msg of
@@ -75,6 +81,8 @@ doUpdate msg m =
             doDrag y m
         DragEnd  ->
             stopDrag m
+        NumSlits n ->
+            { m | slits = layoutSlits n m.height, drag = Nothing }
 
 
 {-| Run the program.
