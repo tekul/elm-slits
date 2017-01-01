@@ -1,4 +1,4 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 {-| An illustration of interference in the famous double-slits physics experiment.
 
@@ -14,6 +14,7 @@ import Model exposing (Model, Msg(..), Slit(..), startDrag, doDrag, stopDrag)
 import Mouse exposing (moves, ups)
 import View exposing (view)
 
+port numberOfSlits : (Int -> msg) -> Sub msg
 
 type alias Flags =
     { width : Int
@@ -61,9 +62,12 @@ layoutSlits n_ h =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
+    Sub.batch <|
+    numberOfSlits NumSlits ::
     case model.drag of
-        Nothing -> Sub.none
-        Just _  -> Sub.batch [ Mouse.moves (\p -> DragAt p.y), Mouse.ups (\_ -> DragEnd) ]
+        Nothing -> []
+        Just _  -> [ Mouse.moves (\p -> DragAt p.y), Mouse.ups (\_ -> DragEnd) ]
+
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = (doUpdate msg model, Cmd.none)
