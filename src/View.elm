@@ -5,7 +5,7 @@ import Json.Decode as Json
 import Model exposing (Model, Msg(..), Screen, Slit(..), DiffractionPattern, Wavelength, getSlits)
 import Svg exposing (..)
 import Svg.Attributes exposing (style, fill, fillOpacity, stroke, points, width, height, x, y)
-import Svg.Events exposing (on)
+import VirtualDom exposing (onWithOptions)
 import Tuple exposing (mapFirst, mapSecond)
 
 view : Model -> Html Model.Msg
@@ -58,8 +58,9 @@ drawZoomedSlits : String -> List Slit -> Svg Msg
 drawZoomedSlits h slits =
     let
         intField f = Json.field f Json.int
-        onMouseDown = on "mousedown" <| Json.map2 DragStart (intField "pageY") (intField "offsetY")
-        background = rect [ onMouseDown, width "80", height h, fill "gray" ] []
+        options = { stopPropagation = True, preventDefault = True }
+        onMouseDown = onWithOptions "mousedown" options <| Json.map2 DragStart (intField "pageY") (intField "offsetY")
+        background = rect [ width "80", height h, fill "gray" ] []
         overlay = rect [ onMouseDown, width "80", height h, fillOpacity "0" ] []
         drawSlit (Slit y1 y2) = rect [Svg.Attributes.style "cursor: move", y (toString y1), width "80", height (toString (y2 - y1)), fill "black" ] []
     in
