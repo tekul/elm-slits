@@ -66,6 +66,7 @@ startDrag (yPage, y) ({slits, screen, lambda, drag} as m) =
             Just s  -> List.filter ((/=) s) slits
         dragType (Slit y1 y2) =
             let
+                -- Calculate the difference between mid, top and bottom, then find the shortest
                 mid = abs (y - (y1 + y2) // 2)
                 top = abs (y - y2)
                 bot = abs (y - y1)

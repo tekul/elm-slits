@@ -5,8 +5,12 @@ import Json.Decode as Json
 import Model exposing (Model, Msg(..), Screen, Slit(..), DiffractionPattern, Wavelength, getSlits)
 import Svg exposing (..)
 import Svg.Attributes exposing (style, fill, fillOpacity, stroke, points, width, height, x, y)
-import VirtualDom exposing (onWithOptions)
-import Tuple exposing (mapFirst, mapSecond)
+import Svg.Events
+import Tuple exposing (mapFirst, mapSecond, pair)
+
+
+toString : Int -> String
+toString = String.fromInt
 
 view : Model -> Html Model.Msg
 view m =
@@ -59,7 +63,12 @@ drawZoomedSlits h slits =
     let
         intField f = Json.field f Json.int
         options = { stopPropagation = True, preventDefault = True }
-        onMouseDown = onWithOptions "mousedown" options <| Json.map2 DragStart (intField "pageY") (intField "offsetY")
+        mouseDownDecoder =
+            Json.map2 DragStart (intField "pageY") (intField "offsetY")
+                |> Json.map (\msg -> { message = msg, stopPropagation = True, preventDefault = True })
+
+        onMouseDown =
+            Svg.Events.custom "mousedown" mouseDownDecoder
         background = rect [ width "80", height h, fill "gray" ] []
         overlay = rect [ onMouseDown, width "80", height h, fillOpacity "0" ] []
         drawSlit (Slit y1 y2) = rect [Svg.Attributes.style "cursor: move", y (toString y1), width "80", height (toString (y2 - y1)), fill "black" ] []
@@ -88,7 +97,7 @@ calculateDiffractionPattern slits (xSlits, ySlits) screen lambda =
         screenHeight = y1Screen - y0Screen
         l = abs (xScreen - xSlits)
         twoPiOverLambda = 2 * pi / lambda
-        zip = List.map2 (,)
+        zip = List.map2 pair
 
         calculateIntensityFromY y (is, maxI) =
             if y > screenHeight - ySlits

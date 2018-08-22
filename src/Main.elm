@@ -8,10 +8,11 @@ pattern being updated in real-time.
 @docs main
 -}
 
-import Html exposing (program)
+import Browser
+import Browser.Events exposing (onClick, onMouseMove, onMouseUp)
+import Json.Decode as Json
 import Maybe
 import Model exposing (Model, Msg(..), Slit(..), startDrag, doDrag, stopDrag)
-import Mouse exposing (moves, ups)
 import View exposing (view)
 
 port numberOfSlits : (Int -> msg) -> Sub msg
@@ -32,7 +33,7 @@ init { width, height } =
           , drag = Nothing
           , screen = screen
           , lambda = 50
-          , width = toString width
+          , width = String.fromInt width
           , height = height
           }
         , Cmd.none )
@@ -66,7 +67,10 @@ subscriptions model =
     numberOfSlits NumSlits ::
     case model.drag of
         Nothing -> []
-        Just _  -> [ Mouse.moves (\p -> DragAt p.y), Mouse.ups (\_ -> DragEnd) ]
+        Just _  ->
+            [ onMouseMove (Json.map DragAt (Json.field "pageY" Json.int))
+            , onMouseUp (Json.succeed DragEnd)
+            ]
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -90,20 +94,12 @@ doUpdate msg m =
 
 
 {-| Run the program.
+  Change "()" to "Flags" for embedding and remove hard-coded Flags
 -}
-main : Program Flags Model Msg
+main : Program () Model Msg
 main =
-    {-
-    Html.program
-        { init = init (Flags 800 600)
-        , subscriptions = subscriptions
-        , update = update
-        , view = view
-        }
--}
-
-    Html.programWithFlags
-        { init = init
+    Browser.element
+        { init = \_ -> init (Flags 800 600)
         , subscriptions = subscriptions
         , update = update
         , view = view
